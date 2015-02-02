@@ -35,6 +35,7 @@ our %Conf;
 our $VERSION = $Bio::KBase::Auth::VERSION;
 
 our @trust_token_signers = trust_token_signers;
+our %trust_token_signers = map { $_ => 1 } @trust_token_signers;
 
 # Tokens (last time we checked) had a 24 hour lifetime, this value can be
 # used to add extra time to the lifetime of tokens. The unit is seconds.
@@ -475,7 +476,8 @@ sub validate {
 	# signing subject has a URL that matches the URL for our
 	# Globus Nexus Rest service. A token that is signed by someone
 	# else isn't really that interesting to us.
-	unless ( $vars{'SigningSubject'} =~ /^\Q$Bio::KBase::Auth::AuthSvcHost\E/) {
+	unless ( ($vars{'SigningSubject'} =~ /^\Q$Bio::KBase::Auth::AuthSvcHost\E/) ||
+	         $trust_token_signers{$vars{SigningSubject}} ) {
 	    die "Token signed by unrecognized source: ".$vars{'SigningSubject'};
 	}
 	unless (length($vars{'sig'}) == 256) {
