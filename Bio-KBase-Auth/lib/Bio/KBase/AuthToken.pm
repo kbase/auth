@@ -222,7 +222,7 @@ sub token {
     # parse out token and set user_id
     eval {
 	$self->{'token'} = $token;
-	($self->{'user_id'}) = $token =~ /un=(\w+)/;
+	($self->{'user_id'}) = $token =~ /un=([^|]+)/;
 	unless ($self->{'user_id'}) {
 	    # Could this be a sessionid hash?
 	    unless ( $self->{token} =~ m/^[0-9a-fA-F]{64}$/) {
