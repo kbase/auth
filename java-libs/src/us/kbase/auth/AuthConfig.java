@@ -25,7 +25,8 @@ public class AuthConfig {
 	
 	private static final String LOGIN_LOC = "Sessions/Login";
 	private static final String GLOBUS_GROUPS = "groups/";
-	private static final String GLOBUS_MEMBERS = "/members/";
+	private static final String GLOBUS_USERS = "users/";
+	private static final String GLOBUS_GROUP_MEMBERS = "/members/";
 			
 	private URI authServerURL;
 	private URI globusURL;
@@ -169,13 +170,30 @@ public class AuthConfig {
 	}
 	
 	/** Returns the full URL used for querying users with the Globus Online
-	 * service.
+	 * service within a specified group.
+	 * 
+	 * NOTE: not all valid KBase users are part of the KBase Globus Group! So
+	 * this URL should be used with extreme caution for looking up user information.
+	 *
 	 * @return the Globus user query URL.
 	 */
 	public URL getGlobusGroupMembersURL() {
 		try {
 			return globusURL.resolve(GLOBUS_GROUPS +
-					kbaseUsersGroupID.toString() + GLOBUS_MEMBERS).toURL();
+					kbaseUsersGroupID.toString() + GLOBUS_GROUP_MEMBERS).toURL();
+		} catch (MalformedURLException e) {
+			throw new RuntimeException("This should never happen");
+		}
+	}
+
+	/** Returns the full URL used for querying users with the Globus Online
+	 * service for any registered user regardles of group.
+
+	 * @return the Globus user query URL.
+	 */
+	public URL getGlobusUsersURL() {
+		try {
+			return globusURL.resolve(GLOBUS_USERS).toURL();
 		} catch (MalformedURLException e) {
 			throw new RuntimeException("This should never happen");
 		}

@@ -5,6 +5,17 @@ Java client for the KBase authorization service (and Globus Online directly
 where the KBase auth service doesn't yet have the required functionality).
 See the versions file for a mapping of git commit -> version.
 
+VERSION 0.3.1 (Released 5/15/15)
+------------------------------------------
+
+BUG FIXES
+- Fix for KBASE-2024 - looking up user info from Globus used a URL based on
+  the group path (i.e. /groups/[groupid]/members/[userid]), but not all kbase
+  users are in the kbase users group, thus WS sharing breaks for about 1/10th of
+  users which need to verify that the user account exists.  The URL was switched
+  to /users/[userid], which returns a user record regardless of group affiliation. 
+
+
 VERSION 0.3.0 (Released 4/8/15)
 ------------------------------------------
 

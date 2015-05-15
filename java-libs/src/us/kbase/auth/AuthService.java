@@ -241,11 +241,11 @@ public class AuthService {
 		for (final String name: result.keySet()) {
 			URL query = null;
 			try {
-				query = new URL(config.getGlobusGroupMembersURL().toString()
+				query = new URL(config.getGlobusUsersURL().toString()
 						+ name);
 			} catch (MalformedURLException mue) {
 				throw new RuntimeException("globus url " +
-						config.getGlobusGroupMembersURL() + 
+						config.getGlobusUsersURL() + 
 						" magically has illegal characters", mue);
 			}
 			final HttpsURLConnection conn = (HttpsURLConnection) query.openConnection();
@@ -283,7 +283,7 @@ public class AuthService {
 				USER_CACHE.putString(user);
 				result.put(user, new UserDetail(user,
 						(String) userdetail.get("email"),
-						(String) userdetail.get("name")));
+						(String) userdetail.get("fullname")));
 			}
 		}
 		return result;
