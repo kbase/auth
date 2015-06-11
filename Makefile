@@ -7,15 +7,10 @@ SRC_PERL = $(wildcard scripts/*.pl)
 BIN_PERL = $(addprefix $(BIN_DIR)/,$(basename $(notdir $(SRC_PERL))))
 LIB_PERL = $(wildcard Bio-KBase-Auth/lib/Bio/KBase/*.pm)
 
-GLOBUS_TOKEN_URL = http://rast.nmpdr.org/goauth/token?grant_type=client_credentials
-GLOBUS_PROFILE_URL = http://rast.nmpdr.org/users
-TRUST_TOKEN_SIGNERS = https://rast.nmpdr.org/goauth/keys https://user.alpha.patricbrc.org/public_key https://nexus.api.globusonline.org/goauth/keys
 
-
-#GLOBUS_TOKEN_URL = https://nexus.api.globusonline.org/goauth/token?grant_type=client_credentials
-#GLOBUS_PROFILE_URL = https://nexus.api.globusonline.org/users
-
-#TRUST_TOKEN_SIGNERS = https://nexus.api.globusonline.org/goauth/keys
+GLOBUS_TOKEN_URL = https://nexus.api.globusonline.org/goauth/token?grant_type=client_credentials
+GLOBUS_PROFILE_URL = https://nexus.api.globusonline.org/users
+TRUST_TOKEN_SIGNERS = https://nexus.api.globusonline.org/goauth/keys
 ROLE_SERVICE_URL = https://kbase.us/services/authorization/Roles
 
 TPAGE_ARGS = --define kb_top=$(TARGET) \
