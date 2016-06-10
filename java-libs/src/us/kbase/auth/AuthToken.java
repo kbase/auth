@@ -109,7 +109,7 @@ public class AuthToken {
 		final Calendar cal = Calendar.getInstance();
 		cal.setTime(exp);
 		cal.add(Calendar.YEAR, -1);
-		cal.add(Calendar.DAY_OF_YEAR, 1);
+//		cal.add(Calendar.DAY_OF_YEAR, 1);
 		issued = cal.getTime();
 		clientId = parsed.get("client_id");
 		tokenType = parsed.get("token_type");

@@ -56,7 +56,7 @@
 
   <target name="test" depends="compile" description="run tests">
     <fail unless="test.user.password" message="property test.user.password not set."/>
-    <junit failureproperty="test.failed">
+    <junit failureproperty="test.failed" fork="yes">
       <classpath refid="compile.classpath"/>
       <classpath path="${compile.jarfile}"/>
       <classpath path="${test}"/>
