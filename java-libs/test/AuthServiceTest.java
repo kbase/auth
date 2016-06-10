@@ -332,8 +332,9 @@ public class AuthServiceTest {
 		int clockSkew = (int)(token.getIssueDate().getTime() - new Date().getTime()) / 1000; // sec 
 
 		// If that clockSkew is < 0, flip the sign and add it to the short lifespan
-		if (clockSkew < 0)
+		if (clockSkew < 0) {
 			tokenLifespan -= clockSkew;
+		}
 
 		// Get a fresh token with a short expiry time.
 		token = AuthService.login(TEST_UID, TEST_PW, tokenLifespan).getToken();

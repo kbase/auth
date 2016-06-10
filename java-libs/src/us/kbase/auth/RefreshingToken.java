@@ -63,7 +63,8 @@ public class RefreshingToken {
 	 * @throws AuthException if the user credentials are no longer valid.
 	 * @throws IOException if an IO error occurs.
 	 */
-	public AuthToken getToken() throws AuthException, IOException {
+	public synchronized AuthToken getToken()
+			throws AuthException, IOException {
 		if (new Date().getTime() - refreshDate.getTime()
 				> refreshIntervalMSec) {
 			this.token = login(user, password);
