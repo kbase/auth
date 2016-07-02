@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -248,7 +249,7 @@ public class AuthService {
 						config.getGlobusUsersURL() + 
 						" magically has illegal characters", mue);
 			}
-			final HttpsURLConnection conn = (HttpsURLConnection) query.openConnection();
+			final HttpURLConnection conn = (HttpURLConnection) query.openConnection();
 			conn.setRequestProperty("X-Globus-Goauthtoken", token.toString());
 			conn.setRequestMethod("GET");
 			conn.setDoOutput(true);
@@ -324,7 +325,7 @@ public class AuthService {
 		//TODO add retries
 		try {
 			// Build the connection project and set it up.
-			final HttpsURLConnection conn = (HttpsURLConnection)
+			final HttpURLConnection conn = (HttpURLConnection)
 					config.getAuthLoginURL().openConnection();
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 			conn.setRequestProperty("Content-Length", String.valueOf(dataStr.getBytes().length));
@@ -489,7 +490,7 @@ public class AuthService {
 	 */
 	static void checkServiceUrl(URL url) throws IOException {
 
-		HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
 		int response = conn.getResponseCode();
 
