@@ -10,6 +10,8 @@ import us.kbase.auth.AuthToken;
 /** An auto-refreshing token. The token refreshes itself periodically and so
  * can never expire as long as the credentials are valid.
  * @author gaprice@lbl.gov
+ * 
+ * @deprecated This class will fail once the new auth service is deployed.
  *
  */
 public class RefreshingToken {

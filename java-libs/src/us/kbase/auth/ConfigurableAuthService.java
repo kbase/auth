@@ -50,23 +50,13 @@ public class ConfigurableAuthService {
 		AuthService.checkServiceUrl(this.config.getAuthLoginURL());
 	}
 	
-	/**
-	 * Logs in a user and returns an AuthUser object, which is more or less a POJO containing basic user attributes,
-	 * along with the generated AuthToken.
-	 * 
-	 * @param userName the username
-	 * @param password the password
-	 * @param expiry the desired expiration time for the token in seconds.
-	 * @return an AuthUser that has been successfully logged in.
-	 * @throws AuthException if the credentials are invalid
-	 * @throws IOException if there is a problem communicating with the server.
+	/** Returns the configuration of the auth client.
+	 * @return the authorization configuration.
 	 */
-	public AuthUser login(String userName, String password, long expiry)
-			throws AuthException, IOException {
-		return AuthService.login(userName, password, expiry, config);
+	public AuthConfig getConfig() {
+		return config;
 	}
 	
-
 	/**
 	 * Logs in a user and returns an AuthUser object, which is more or less a POJO containing basic user attributes,
 	 * along with the generated AuthToken.
@@ -79,8 +69,7 @@ public class ConfigurableAuthService {
 	 */
 	public AuthUser login(String userName, String password)
 			throws AuthException, IOException {
-		return AuthService.login(userName, password, AuthToken.DEFAULT_EXPIRES,
-				config);
+		return AuthService.login(userName, password, config);
 	}
 	
 	/** Returns a token that continually refreshes itself and thus never
@@ -92,6 +81,8 @@ public class ConfigurableAuthService {
 	 * @return a auto-refreshing token.
 	 * @throws AuthException if the credentials are invalid.
 	 * @throws IOException if an IO error occurs.
+	 * 
+	 * @deprecated This method will fail once the new auth service is deployed.
 	 */
 	public RefreshingToken getRefreshingToken(
 			final String userName,
@@ -132,7 +123,7 @@ public class ConfigurableAuthService {
 	public Map<String, Boolean> isValidUserName(List<String> usernames)
 			throws IOException, AuthException {
 		checkToken();
-		return isValidUserName(usernames, config.getToken().getToken());
+		return isValidUserName(usernames, config.getToken());
 	}
 	
 	/**
@@ -166,10 +157,10 @@ public class ConfigurableAuthService {
 	public Map<String, UserDetail> fetchUserDetail(List<String> usernames)
 			throws IOException, AuthException {
 		checkToken();
-		return fetchUserDetail(usernames, config.getToken().getToken());
+		return fetchUserDetail(usernames, config.getToken());
 	}
 
-	private void checkToken() throws TokenException {
+	private void checkToken() throws AuthException, IOException {
 		if (config.getToken() == null) {
 			throw new TokenException(
 					"No token specified in the auth client configuration");
@@ -204,37 +195,23 @@ public class ConfigurableAuthService {
 				throw new NullPointerException(
 						"If no token is specified in the auth client configuration a token must be provided");
 			} else {
-				token = config.getToken().getToken();
+				return config.getToken();
 			}
 		}
 		return token;
 	}
 	
 	/**
-	 * Given a String representation of an auth token, this validates it against its source in Globus Online.
+	 * Validates a token and returns a validated token.
 	 * 
-	 * @param tokenStr the token string retrieved from KBase
-	 * @return true if the token's valid, false otherwise
-	 * @throws AuthException if the credentials are invalid
+	 * @param tokenStr the token string to validate.
+	 * @return a validated token
 	 * @throws IOException if there is a problem communicating with the server.
+	 * @throws AuthException if the token is invalid.
 	 */
-	public boolean validateToken(String tokenStr)
-			throws TokenFormatException, TokenExpiredException, IOException {
-		AuthToken token = new AuthToken(tokenStr);
-		return AuthService.validateToken(token, config);
+	public AuthToken validateToken(final String tokenStr)
+			throws IOException, AuthException {
+		return AuthService.validateToken(tokenStr, config);
 	}
 	
-	/**
-	 * This validates a KBase Auth token, and returns true or if valid or false if not.
-	 * If the token has expired, it throws a TokenExpiredException.
-	 *
-	 * @param token the token to validate
-	 * @return true if the token's valid, false otherwise
-	 * @throws TokenExpiredException if the token is expired (it might be otherwise valid)
-	 * @throws IOException if there's a problem communicating with the back end validator.
-	 */
-	public boolean validateToken(AuthToken token)
-			throws TokenExpiredException, IOException {
-		return AuthService.validateToken(token, config);
-	}
 }
