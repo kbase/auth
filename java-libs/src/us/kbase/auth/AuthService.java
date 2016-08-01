@@ -55,28 +55,24 @@ public class AuthService {
 			Pattern.compile("[^a-zA-Z0-9_-]");
 	
 	/**
-	 * Logs in a user and returns an AuthUser object, which is more or less a POJO containing basic user attributes,
-	 * along with the generated AuthToken.
+	 * Logs in a user and returns an AuthUser object.
 	 * 
 	 * @param userName the username
 	 * @param password the password
-	 * @param expiry the desired expiration time for the token in seconds.
 	 * @return an AuthUser that has been successfully logged in.
 	 * @throws AuthException if the credentials are invalid
 	 * @throws IOException if there is a problem communicating with the server.
 	 */
 	public static AuthUser login(
 			final String userName,
-			final String password,
-			final long expiry)
+			final String password)
 			throws AuthException, IOException {
-		return login(userName, password, expiry, DEFAULT_CONFIG);
+		return login(userName, password, DEFAULT_CONFIG);
 	}
 	
 	static AuthUser login(
 			final String userName,
 			final String password,
-			final long expiry,
 			final AuthConfig config)
 			throws AuthException, IOException {
 		// This is the data that will be POSTed to the service.
@@ -84,8 +80,8 @@ public class AuthService {
 		try {
 			String dataStr = "user_id=" + URLEncoder.encode(userName, "UTF-8") + 
 							 "&password=" + URLEncoder.encode(password, "UTF-8") + 
-							 "&cookie=1&fields=user_id,name,email,groups,kbase_sessionid,token,verified,opt_in,system_admin";
-			return fetchUser(dataStr, expiry, config);
+							 "&fields=user_id,name,email,token";
+			return fetchUser(dataStr, config);
 		}
 		catch (UnsupportedEncodingException e) {
 			throw new RuntimeException("An unexpected URL encoding exception occurred: " + e.getLocalizedMessage());
@@ -93,22 +89,6 @@ public class AuthService {
 	}
 	
 
-	/**
-	 * Logs in a user and returns an AuthUser object, which is more or less a POJO containing basic user attributes,
-	 * along with the generated AuthToken.
-	 * 
-	 * @param userName the username
-	 * @param password the password
-	 * @return an AuthUser that has been successfully logged in.
-	 * @throws AuthException if the credentials are invalid
-	 * @throws IOException if there is a problem communicating with the server.
-	 */
-	public static AuthUser login(String userName, String password)
-			throws AuthException, IOException {
-		return login(userName, password, AuthToken.DEFAULT_EXPIRES,
-				DEFAULT_CONFIG);
-	}
-	
 	/** Returns a token that continually refreshes itself and thus never
 	 * expires, as long as the credentials are correct.
 	 * @param userName the user name of the user who the token will represent.
@@ -118,6 +98,8 @@ public class AuthService {
 	 * @return a auto-refreshing token.
 	 * @throws AuthException if the credentials are invalid.
 	 * @throws IOException if an IO error occurs.
+	 * 
+	 * @deprecated This method will fail once the new auth server is deployed.
 	 */
 	public static RefreshingToken getRefreshingToken(
 			final String userName,
@@ -145,10 +127,10 @@ public class AuthService {
 	
 	static AuthUser getUserFromToken(AuthToken token, AuthConfig config)
 			throws AuthException, IOException {
-		String dataStr = "token=" + token.toString() +
-				 "&fields=user_id,name,email,groups,kbase_sessionid,token,verified,opt_in,system_admin";
+		String dataStr = "token=" + token.getToken() +
+				 "&fields=user_id,name,email,token";
 
-		return fetchUser(dataStr, token.getExpiryTime(), config);
+		return fetchUser(dataStr, config);
 	}
 	
 	/**
@@ -249,7 +231,7 @@ public class AuthService {
 						" magically has illegal characters", mue);
 			}
 			final HttpsURLConnection conn = (HttpsURLConnection) query.openConnection();
-			conn.setRequestProperty("X-Globus-Goauthtoken", token.toString());
+			conn.setRequestProperty("X-Globus-Goauthtoken", token.getToken());
 			conn.setRequestMethod("GET");
 			conn.setDoOutput(true);
 			conn.setUseCaches(false);
@@ -315,7 +297,6 @@ public class AuthService {
 	 */
 	static AuthUser fetchUser(
 			final String dataStr,
-			final long expiry,
 			final AuthConfig config)
 			throws AuthException, IOException {
 		// Start with a null user - if the mapper fails for some reason, we know it's
@@ -343,11 +324,27 @@ public class AuthService {
 			// If we don't have a happy response code, throw an exception.
 			int responseCode = conn.getResponseCode();
 			if (responseCode != 200) {
+				final BufferedReader br = new BufferedReader(
+						new InputStreamReader(conn.getErrorStream()));
+				final String responseText = readFromReaderAndClose(br);
 				conn.disconnect();
 				if (responseCode < 500) {
-					throw new AuthException("Login failed! Server responded with code " + responseCode + " " + conn.getResponseMessage());
+					throw new AuthException(
+							"Login failed! Server responded with code " +
+							responseCode + " " + conn.getResponseMessage());
 				} else {
-					throw new IOException("Server comms failed. Code: " + responseCode + " " + conn.getResponseMessage());
+					// ugh, god.
+					if (responseText.contains(
+							"need more than 1 value to unpack")) {
+						throw new AuthException("Login failed! Invalid token");
+					}
+					if (responseText.contains(
+							"too many values to unpack")) {
+						throw new AuthException("Login failed! Invalid token");
+					}
+					throw new IOException("Server comms failed. Code: " +
+							responseCode + " " + conn.getResponseMessage() +
+							"\n" + responseText);
 				}
 			}
 
@@ -366,7 +363,7 @@ public class AuthService {
 				throw new IOException("Server returned a null object. Code: " + responseCode + " " + conn.getResponseMessage());
 			}
 			if (user.getToken() != null) {
-				user.getToken().setExpiryTime(expiry);
+				user.getToken().setUserName(user.getUserId());
 				TOKEN_CACHE.putValidToken(user.getToken());
 			}
 
@@ -383,57 +380,35 @@ public class AuthService {
 	}
 	
 	/**
-	 * Given a String representation of an auth token, this validates it against its source in Globus Online.
+	 * Validates a token and returns user details.
 	 * 
-	 * @param tokenStr the token string retrieved from KBase
-	 * @return true if the token's valid, false otherwise
-	 * @throws AuthException if the credentials are invalid
+	 * @param tokenStr the token string to validate.
+	 * @return a validated token
 	 * @throws IOException if there is a problem communicating with the server.
+	 * @throws AuthException if the token is invalid.
 	 */
-	public static boolean validateToken(String tokenStr)
-			throws TokenFormatException, TokenExpiredException, IOException {
-		AuthToken token = new AuthToken(tokenStr);
-		return validateToken(token);
+	public static AuthToken validateToken(final String tokenStr)
+			throws IOException, AuthException {
+		return validateToken(tokenStr, DEFAULT_CONFIG);
 	}
 	
-	/**
-	 * This validates a KBase Auth token, and returns true or if valid or false if not.
-	 * If the token has expired, it throws a TokenExpiredException.
-	 *
-	 * @param token the token to validate
-	 * @return true if the token's valid, false otherwise
-	 * @throws TokenExpiredException if the token is expired (it might be otherwise valid)
-	 * @throws IOException if there's a problem communicating with the back end validator.
-	 */
-	public static boolean validateToken(AuthToken token)
-			throws TokenExpiredException, IOException {
-		return validateToken(token, DEFAULT_CONFIG);
-	}
-
-	static boolean validateToken(AuthToken token, AuthConfig config)
-			throws TokenExpiredException, IOException {
-		// If it's expired, then it's invalid, and we throw an exception
-		if(token.isExpired()) {
-			throw new TokenExpiredException("token expired");
-		}
+	static AuthToken validateToken(
+			final String tokenStr,
+			final AuthConfig config)
+			throws IOException, AuthException {
 		
 		// If it's in the cache, then it's valid.
-		if(TOKEN_CACHE.hasToken(token)) {
-			return true;
+		final AuthToken t = TOKEN_CACHE.getToken(tokenStr);
+		if (t != null) {
+			return t;
 		}
 
 		// Otherwise, fetch the user from the Auth Service.
-		// If the user is there, then cache this token and return that it's valid.
-		try {
-			// if we get a user back (and not an exception), then the token is valid.
-			String dataStr = "token=" + token.toString() + "&fields=user_id";
-			fetchUser(dataStr, token.getExpiryTime(), config);
-			TOKEN_CACHE.putValidToken(token);
-			return true;
-		} catch (AuthException e) {
-			// if we get an exception, then an authentication error happened - that's an invalid token.
-			return false;
-		}
+		// if we get a user back (and not an exception), then the token is valid.
+		final String dataStr = "token=" + tokenStr + "&fields=user_id,token";
+		final AuthUser u = fetchUser(dataStr, config);
+		TOKEN_CACHE.putValidToken(u.getToken());
+		return u.getToken();
 	}
 
 	/**
@@ -477,18 +452,18 @@ public class AuthService {
 	}
 	
 	/**
-	 * Sets the URL that the service should point to. This is the URL that points to the login service:
+	 * Checks the provided login service url. The default is:
 	 * https://kbase.us/services/authorization/Sessions/Login
 	 * 
-	 * Before setting the URL, this checks to see if a service exists there with a simple GET request.
-	 * If it sees something resembling the KBase auth service, it will set the URL and return 'true'. 
-	 * Otherwise, no change is made and 'false' is returned.
+	 * Checks to see if a service exists there with a simple GET request.
 	 *
 	 * @param url the new URL for the service
-	 * @throws IOException if something goes wrong with the connection test.
+	 * @throws IOException if something goes wrong with the connection test or
+	 * the URL is not a valid auth service url.
 	 */
 	static void checkServiceUrl(URL url) throws IOException {
 
+		//TODO LATER need to support HTTP connections for testing purposes, but need to make it very explicit that's happening (like the SDK java clients)
 		HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
 
 		int response = conn.getResponseCode();

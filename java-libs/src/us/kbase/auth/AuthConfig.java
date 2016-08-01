@@ -1,5 +1,6 @@
 package us.kbase.auth;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,7 +22,6 @@ public class AuthConfig {
 			"https://nexus.api.globusonline.org/";
 	private static final String DEFAULT_KBASE_USER_GROUP_ID =
 			"99d2a548-7218-11e2-adc0-12313d2d6e7f";
-	private static final RefreshingToken DEFAULT_TOKEN = null;
 	
 	private static final String LOGIN_LOC = "Sessions/Login";
 	private static final String GLOBUS_GROUPS = "groups/";
@@ -31,7 +31,31 @@ public class AuthConfig {
 	private URI authServerURL;
 	private URI globusURL;
 	private UUID kbaseUsersGroupID;
-	private RefreshingToken token;
+	@SuppressWarnings("deprecation")
+	private RefreshingToken refreshingToken = null;
+	private AuthToken token = null;
+	
+	/** Get the default authorization URL.
+	 * @return the default authorization URL.
+	 */
+	public static URL getDefaultAuthURL() {
+		try {
+			return new URL(DEFAULT_KBASE_AUTH_SERVER_URL);
+		} catch (MalformedURLException e) {
+			throw new RuntimeException("The impossible just happened");
+		}
+	}
+	
+	/** Get the default Globus URL.
+	 * @return the default Globus URL.
+	 */
+	public static URL getDefaultGlobusURL() {
+		try {
+			return new URL(DEFAULT_GLOBUS_AUTH_URL);
+		} catch (MalformedURLException e) {
+			throw new RuntimeException("The impossible just happened");
+		}
+	}
 	
 	/**
 	 * Create a configuration object with default settings. In this case the
@@ -46,7 +70,6 @@ public class AuthConfig {
 					"This cannot occur. Please check with your local deity for an explanation.");
 		}
 		kbaseUsersGroupID = UUID.fromString(DEFAULT_KBASE_USER_GROUP_ID);
-		token = DEFAULT_TOKEN;
 	}
 	
 	/** Set the URL of the KBase authorization server
@@ -110,14 +133,45 @@ public class AuthConfig {
 	 * in order to see all users in the specified group, the user this token
 	 * represents must be an administrator of the group. Otherwise users with
 	 * private profiles will not be visible.
+	 * 
+	 * Only one of a refreshing token and standard token can be set. Setting
+	 * one will remove the other.
+	 * 
 	 * @param token the token to use for Globus queries.
 	 * @return this
+	 * 
+	 *  @deprecated RefreshingTokens will not be possible when the new auth
+	 * service is deployed.
 	 */
-	public AuthConfig withRefreshingToken(final RefreshingToken token) {
+	public synchronized AuthConfig withRefreshingToken(
+			final RefreshingToken token) {
+		if (token == null) {
+			throw new NullPointerException("token cannot be null");
+		}
+		this.refreshingToken = token;
+		this.token = null;
+		return this;
+	}
+	
+	/** Set the token to use when querying users in Globus Online. This token
+	 * is used when validating user names and fetching user details. Note that
+	 * in order to see all users in the specified group, the user this token
+	 * represents must be an administrator of the group. Otherwise users with
+	 * private profiles will not be visible.
+	 * 
+	 * Only one of a refreshing token and standard token can be set. Setting
+	 * one will remove the other.
+	 * 
+	 * @param token the token to use for Globus queries.
+	 * @return this
+	 * 
+	 */
+	public synchronized AuthConfig withToken(final AuthToken token) {
 		if (token == null) {
 			throw new NullPointerException("token cannot be null");
 		}
 		this.token = token;
+		this.refreshingToken = null;
 		return this;
 	}
 
@@ -150,11 +204,27 @@ public class AuthConfig {
 		return kbaseUsersGroupID;
 	}
 
-	/** Returns the configured token used when querying users.
+	/** Returns the configured refreshing token used when querying users.
 	 * @return the token.
+	 * 
+	 * @deprecated RefreshingTokens will not be possible when the new auth
+	 * service is deployed.
 	 */
-	public RefreshingToken getToken() {
-		return token;
+	public RefreshingToken getRefreshingToken() {
+		return refreshingToken;
+	}
+	
+	/** Returns the configured token, either from a refreshing token or a
+	 * standard token, used when querying users.
+	 * @return the token.
+	 * @throws IOException if an IO error occurs when refreshing the token.
+	 * @throws AuthException if an authentication error occurs when refreshing
+	 * the token.
+	 * 
+	 */
+	@SuppressWarnings("deprecation")
+	public AuthToken getToken() throws AuthException, IOException {
+		return refreshingToken == null ? token : refreshingToken.getToken();
 	}
 	
 	/** Returns the full URL used for logging in a user with the KBase
