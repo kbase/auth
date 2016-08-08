@@ -13,13 +13,6 @@ import java.util.Map;
  * cache is static across all instances of ConfigurableAuthService and the
  * static AuthService class.
  * 
- * AuthUser user = new AuthService().login(user, password);
- * if (new AuthService().validateToken(user.getToken())) {
- * 		// There's a valid token! Return the valid user, or just the token, and move along.
- * }
- * 
- * Thus, this provides code for a user to log in to KBase, retrieve a valid
- * Auth token, and optionally validate it.
  * 
  * All tokens seen by this class are cached by the
  * {@link us.kbase.auth.TokenCache} class.
@@ -32,6 +25,9 @@ public class ConfigurableAuthService {
 	private final AuthConfig config;
 
 	/** Create an authorization service client with the default configuration.
+	 * Checks that the url provided in the config is valid by calling the auth
+	 * service. As such, do not repeatedly instantiate a client - instantiate
+	 * it once and save it.
 	 * @throws IOException if an IO error occurs.
 	 */
 	public ConfigurableAuthService() throws IOException {

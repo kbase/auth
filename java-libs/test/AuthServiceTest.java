@@ -128,6 +128,25 @@ public class AuthServiceTest {
 		System.out.println("Done testing!");
 	}
 	
+	@Test
+	public void badAuthUrl() throws Exception {
+		failSetUrl("https://kbase.us/authorizations",
+				"Auth service URL https://kbase.us/authorizations/Sessions/Login is invalid. Server said: 404 Not Found");
+		failSetUrl("https://foobarbazbangfakefakefake.com/authorization",
+				"foobarbazbangfakefakefake.com"); // unknown host
+	}
+	
+	private void failSetUrl(final String url, final String exp)
+			throws Exception {
+		final URL u = new URL(url);
+		final AuthConfig ac = new AuthConfig().withKBaseAuthServerURL(u);
+		try {
+			new ConfigurableAuthService(ac);
+		} catch (IOException ioe) {
+			assertThat("incorrect exception", ioe.getMessage(), is(exp));
+		}
+	}
+
 	//test tokencache
 	@Test
 	public void authTokenConstruction() throws Exception {
@@ -185,6 +204,33 @@ public class AuthServiceTest {
 		}
 	}
 	
+	@Test
+	public void tokenCachePutValidTokenBadArgs() throws Exception {
+		final TokenCache tc = new TokenCache();
+		try {
+			tc.putValidToken(null);
+		} catch (NullPointerException npe) {
+			assertThat("incorrect exception", npe.getMessage(),
+					is("token cannot be null"));
+		}
+	}
+	
+	@Test
+	public void tokenCacheGetTokenBadArgs() throws Exception {
+		failGetToken("");
+		failGetToken(null);
+	}
+	
+	private void failGetToken(final String token) {
+		final TokenCache tc = new TokenCache();
+		try {
+			tc.getToken(token);
+		} catch (IllegalArgumentException iae) {
+			assertThat("incorrect exception", iae.getMessage(),
+					is("token cannot be null or empty"));
+		}
+	}
+
 	@Test
 	public void tokenCacheDropsExpiredTokens() throws Exception {
 		TokenCache tc = new TokenCache(2, 3);
@@ -586,6 +632,28 @@ public class AuthServiceTest {
 		AuthService.validateToken("asdf");
 	}
 	
+	@Test
+	public void validateTokenBadArgs() throws Exception {
+		failValidate("");
+		failValidate(null);
+	}
+	
+	private void failValidate(String token) throws Exception {
+		try {
+			AuthService.validateToken(token);
+		} catch (IllegalArgumentException iae) {
+			assertThat("incorrect exception", iae.getMessage(),
+					is("token cannot be null or empty"));
+		}
+		final ConfigurableAuthService cas = new ConfigurableAuthService();
+		try {
+			cas.validateToken(token);
+		} catch (IllegalArgumentException iae) {
+			assertThat("incorrect exception", iae.getMessage(),
+					is("token cannot be null or empty"));
+		}
+	}
+
 	@Test(expected = AuthException.class)
 	public void testFailValidateConfigurable() throws AuthException, IOException {
 		new ConfigurableAuthService().validateToken("asdf");

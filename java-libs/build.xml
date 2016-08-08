@@ -29,12 +29,12 @@
   <target name="compile" description="compile the source">
     <fail unless="compile.jarfile" message="property compile.jarfile not set."/>
     <!-- Compile class files-->
-    <javac srcdir="${src}" includeantruntime="false" target="1.6" source="1.6"
+    <javac srcdir="${src}" includeantruntime="false" target="1.7" source="1.7"
       debug="true" classpathref="compile.classpath"/>
     <!-- Make main jar file-->
     <jar destfile="${compile.jarfile}" basedir="${src}"/>
     <!-- Compile the tests -->
-    <javac srcdir="${test}" includeantruntime="false" target="1.6" source="1.6"
+    <javac srcdir="${test}" includeantruntime="false" target="1.7" source="1.7"
       debug="true">
       <classpath refid="compile.classpath"/>
       <classpath path="${compile.jarfile}"/>
