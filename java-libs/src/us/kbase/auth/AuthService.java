@@ -46,6 +46,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class AuthService {
 	
+	/* should really handle tokens and pwds as char[] instead of String so the
+	 * char[] can be wiped when it's no longer needed. But since they're going
+	 * over the wire they're probably already strings or will be converted to
+	 * Strings at some point or another.
+	 */
+	
 	private AuthService() {};
 	
 	private final static AuthConfig DEFAULT_CONFIG = new AuthConfig();
@@ -393,19 +399,23 @@ public class AuthService {
 	}
 	
 	static AuthToken validateToken(
-			final String tokenStr,
+			final String token,
 			final AuthConfig config)
 			throws IOException, AuthException {
+		if (token == null || token.isEmpty()) {
+			throw new IllegalArgumentException(
+					"token cannot be null or empty");
+		}
 		
 		// If it's in the cache, then it's valid.
-		final AuthToken t = TOKEN_CACHE.getToken(tokenStr);
+		final AuthToken t = TOKEN_CACHE.getToken(token);
 		if (t != null) {
 			return t;
 		}
 
 		// Otherwise, fetch the user from the Auth Service.
 		// if we get a user back (and not an exception), then the token is valid.
-		final String dataStr = "token=" + tokenStr + "&fields=user_id,token";
+		final String dataStr = "token=" + token + "&fields=user_id,token";
 		final AuthUser u = fetchUser(dataStr, config);
 		TOKEN_CACHE.putValidToken(u.getToken());
 		return u.getToken();
@@ -463,26 +473,35 @@ public class AuthService {
 	 */
 	static void checkServiceUrl(URL url) throws IOException {
 
-		//TODO LATER need to support HTTP connections for testing purposes, but need to make it very explicit that's happening (like the SDK java clients)
-		HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+		//TODO AUTH2 need to support HTTP connections for testing purposes, but need to make it very explicit that's happening (like the SDK java clients)
+		
+		final HttpsURLConnection conn =
+				(HttpsURLConnection) url.openConnection();
 
-		int response = conn.getResponseCode();
+		final int response = conn.getResponseCode();
 
 		// we want to check for a 401 error with this text (or something like it):
 		// {"user_id": null, "error_msg": "Must specify user_id and password in POST message body"}
 		if (response == 401) {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-			String line;
 			String result = "";
-			while ((line = reader.readLine()) != null) {
-				result += line;
+			try (final BufferedReader reader = new BufferedReader(
+					new InputStreamReader(conn.getErrorStream()))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					result += line;
+				}
 			}
-			reader.close();
 			conn.disconnect();
 
 			if (!result.contains("\"user_id\": null")) {
-				throw new IOException("Auth service URL invalid");
+				throw new IOException(String.format(
+						"Auth service URL %s is invalid", url));
 			}
+		} else {
+			conn.disconnect();
+			throw new IOException(String.format(
+					"Auth service URL %s is invalid. Server said: %s %s",
+					url, response, conn.getResponseMessage()));
 		}
 	}
 }

@@ -5,8 +5,16 @@ Java client for the KBase authorization service (and Globus Online directly
 where the KBase auth service doesn't yet have the required functionality).
 See the versions file for a mapping of git commit -> version.
 
+VERSION 0.4.1 (Released 8/7/16)
+--------------------------------
+
+BUG FIXES
+- Fixed a bug that allowed configuration of incorrect urls.
+- Token cache now stores a SHA-256 digest of the token rather than the token
+  itself.
+
 VERSION 0.4.0 (Released 7/31/16)
----------------------------
+--------------------------------
 
 BACKWARDS INCOMPATIBILITIES:
 - All RefreshingToken methods and classes are deprecated. They will fail once
