@@ -11,6 +11,8 @@ To install this module, run the following commands:
 
 	perl Build.PL
 	make
+	cp test.cfg.example test.cfg
+	# Modify test.cfg with real credentials
 	make test
 	make install
 

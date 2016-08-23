@@ -1,6 +1,5 @@
 Changes
 lib/Bio/KBase/Auth.pm
-lib/Bio/KBase/AuthUser.pm
 lib/Bio/KBase/AuthToken.pm
 Build.PL
 MANIFEST			This list of files

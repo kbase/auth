@@ -1,0 +1,9 @@
+[auth_test]
+test.validuser=kbasetest
+test.validpassword=******
+test.invaliduser=
+test.invalidpassword=
+test.validtoken1=
+test.validtoken2=
+test.invalidtoken=
+test.authurl=https://kbase.us/services/authorization/Sessions/Login
