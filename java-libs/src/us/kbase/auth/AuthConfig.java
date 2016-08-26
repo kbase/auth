@@ -34,6 +34,7 @@ public class AuthConfig {
 	@SuppressWarnings("deprecation")
 	private RefreshingToken refreshingToken = null;
 	private AuthToken token = null;
+	private boolean allowInsecureURLs = false;
 	
 	/** Get the default authorization URL.
 	 * @return the default authorization URL.
@@ -116,6 +117,19 @@ public class AuthConfig {
 		return this;
 	}
 	
+	/** Allow insecure http URLs rather than https URLs. Only use this setting
+	 * for tests, never in production.
+	 * 
+	 * When using insecure URLs, you must call this method *before*
+	 * initializing the auth client.
+	 * @param insecure
+	 * @return
+	 */
+	public AuthConfig withAllowInsecureURLs(final boolean insecure) {
+		this.allowInsecureURLs = insecure;
+		return this;
+	}
+	
 	/** Set the ID of the group in Globus Online to use when querying users.
 	 * @param groupID the ID of the  group in Globus.
 	 * @return this
@@ -195,6 +209,13 @@ public class AuthConfig {
 		} catch (MalformedURLException e) {
 			throw new RuntimeException("This should never happen");
 		}
+	}
+	
+	/** Returns true if insecure URLs are allowed, false otherwise.
+	 * @return whether insecure URLs are allowed.
+	 */
+	public boolean isInsecureURLsAllowed() {
+		return allowInsecureURLs;
 	}
 
 	/** Returns the configured Globus Online group ID used when querying users.

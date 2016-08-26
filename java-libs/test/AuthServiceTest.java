@@ -130,21 +130,63 @@ public class AuthServiceTest {
 	
 	@Test
 	public void badAuthUrl() throws Exception {
-		failSetUrl("https://kbase.us/authorizations",
-				"Auth service URL https://kbase.us/authorizations/Sessions/Login is invalid. Server said: 404 Not Found");
+		failSetUrl("https://kbase.us/authorizations", new IOException(
+				"Auth service URL https://kbase.us/authorizations/Sessions/Login is invalid. Server said: 404 Not Found"));
 		failSetUrl("https://foobarbazbangfakefakefake.com/authorization",
-				"foobarbazbangfakefakefake.com"); // unknown host
+				new IOException(
+						"foobarbazbangfakefakefake.com")); // unknown host
 	}
 	
-	private void failSetUrl(final String url, final String exp)
+	@Test
+	public void setInsecureURL() throws Exception {
+		/* no way to actually test with an insecure url without standing up
+		 * a local server. It's on the todo list
+		 */
+		final URL u = new URL("http://kbase.us/authorization");
+		final ClassCastException exp = new ClassCastException(
+				"sun.net.www.protocol.http.HttpURLConnection cannot be cast to javax.net.ssl.HttpsURLConnection");
+		failSetUrl(u.toString(), exp);
+		final AuthConfig ac = new AuthConfig().withKBaseAuthServerURL(u)
+				.withAllowInsecureURLs(true);
+		assertThat("incorrect insecure url bool",
+				ac.isInsecureURLsAllowed(), is(true));
+		try {
+			new ConfigurableAuthService(ac); // should pass
+			fail("excpectedException"); // but a different one
+		} catch (IOException e) {
+			assertThat("incorrect exception msg", e.getMessage(), is(
+					"Auth service URL http://kbase.us/authorization/Sessions/Login is invalid. Server said: 404 Not Found"));
+		}
+		ac.withAllowInsecureURLs(false);
+		assertThat("incorrect insecure url bool",
+				ac.isInsecureURLsAllowed(), is(false));
+		try {
+			new ConfigurableAuthService(ac);
+			fail("expected exception");
+		} catch (Exception e) {
+			assertExceptionCorrect(e, exp);
+		}
+	}
+	
+	private void failSetUrl(final String url, final Exception exp)
 			throws Exception {
 		final URL u = new URL(url);
 		final AuthConfig ac = new AuthConfig().withKBaseAuthServerURL(u);
 		try {
 			new ConfigurableAuthService(ac);
-		} catch (IOException ioe) {
-			assertThat("incorrect exception", ioe.getMessage(), is(exp));
+			fail("set bad url");
+		} catch (Exception got) {
+			assertExceptionCorrect(got, exp);
 		}
+	}
+	
+	public static void assertExceptionCorrect(
+			final Exception got,
+			final Exception expected) {
+		assertThat("incorrect exception",
+				got.getMessage(),
+				is(expected.getMessage()));
+		assertThat("incorrect exception type", got, is(expected.getClass()));
 	}
 
 	//test tokencache
@@ -209,6 +251,7 @@ public class AuthServiceTest {
 		final TokenCache tc = new TokenCache();
 		try {
 			tc.putValidToken(null);
+			fail("expected npe");
 		} catch (NullPointerException npe) {
 			assertThat("incorrect exception", npe.getMessage(),
 					is("token cannot be null"));
@@ -225,6 +268,7 @@ public class AuthServiceTest {
 		final TokenCache tc = new TokenCache();
 		try {
 			tc.getToken(token);
+			fail("expected exception");
 		} catch (IllegalArgumentException iae) {
 			assertThat("incorrect exception", iae.getMessage(),
 					is("token cannot be null or empty"));
@@ -641,6 +685,7 @@ public class AuthServiceTest {
 	private void failValidate(String token) throws Exception {
 		try {
 			AuthService.validateToken(token);
+			fail("expected exception");
 		} catch (IllegalArgumentException iae) {
 			assertThat("incorrect exception", iae.getMessage(),
 					is("token cannot be null or empty"));
@@ -648,6 +693,7 @@ public class AuthServiceTest {
 		final ConfigurableAuthService cas = new ConfigurableAuthService();
 		try {
 			cas.validateToken(token);
+			fail("expected exception");
 		} catch (IllegalArgumentException iae) {
 			assertThat("incorrect exception", iae.getMessage(),
 					is("token cannot be null or empty"));
@@ -838,6 +884,7 @@ public class AuthServiceTest {
 	public void throwMangledTokenAtServer() throws Exception {
 		try {
 			AuthService.validateToken(testUser.getToken() + "a");
+			fail("expected exception");
 		} catch (AuthException ae) {
 			assertThat("correct exception message", ae.getLocalizedMessage(),
 					is("Login failed! Invalid token"));
@@ -845,6 +892,7 @@ public class AuthServiceTest {
 		try {
 			new ConfigurableAuthService().validateToken(
 					testUser.getToken() + "a");
+			fail("expected exception");
 		} catch (AuthException ae) {
 			assertThat("correct exception message", ae.getLocalizedMessage(),
 					is("Login failed! Invalid token"));
