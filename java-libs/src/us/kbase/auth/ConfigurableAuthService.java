@@ -43,7 +43,7 @@ public class ConfigurableAuthService {
 			throw new NullPointerException("config cannot be null");
 		}
 		this.config = config;
-		AuthService.checkServiceUrl(this.config.getAuthLoginURL());
+		AuthService.checkServiceUrl(this.config.getAuthLoginURL(), config);
 	}
 	
 	/** Returns the configuration of the auth client.

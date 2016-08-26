@@ -5,6 +5,13 @@ Java client for the KBase authorization service (and Globus Online directly
 where the KBase auth service doesn't yet have the required functionality).
 See the versions file for a mapping of git commit -> version.
 
+VERSION 0.4.2 (Released 8/25/16)
+--------------------------------
+
+NEW FEATURES:
+- AuthConfig.withAllowInsecureURLs allows setting insecure URLs for the 
+  purposes of testing.
+
 VERSION 0.4.1 (Released 8/7/16)
 --------------------------------
 

@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -236,7 +237,8 @@ public class AuthService {
 						config.getGlobusUsersURL() + 
 						" magically has illegal characters", mue);
 			}
-			final HttpsURLConnection conn = (HttpsURLConnection) query.openConnection();
+			final HttpURLConnection conn = (HttpURLConnection) query.openConnection();
+			checkHttps(conn, config);
 			conn.setRequestProperty("X-Globus-Goauthtoken", token.getToken());
 			conn.setRequestMethod("GET");
 			conn.setDoOutput(true);
@@ -311,8 +313,9 @@ public class AuthService {
 		//TODO add retries
 		try {
 			// Build the connection project and set it up.
-			final HttpsURLConnection conn = (HttpsURLConnection)
+			final HttpURLConnection conn = (HttpURLConnection)
 					config.getAuthLoginURL().openConnection();
+			checkHttps(conn, config);
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 			conn.setRequestProperty("Content-Length", String.valueOf(dataStr.getBytes().length));
 			conn.setRequestProperty("Content-Language", "en-US");
@@ -471,12 +474,14 @@ public class AuthService {
 	 * @throws IOException if something goes wrong with the connection test or
 	 * the URL is not a valid auth service url.
 	 */
-	static void checkServiceUrl(URL url) throws IOException {
+	static void checkServiceUrl(final URL url, final AuthConfig config)
+			throws IOException {
 
 		//TODO AUTH2 need to support HTTP connections for testing purposes, but need to make it very explicit that's happening (like the SDK java clients)
 		
-		final HttpsURLConnection conn =
-				(HttpsURLConnection) url.openConnection();
+		final HttpURLConnection conn =
+				(HttpURLConnection) url.openConnection();
+		checkHttps(conn, config);
 
 		final int response = conn.getResponseCode();
 
@@ -502,6 +507,17 @@ public class AuthService {
 			throw new IOException(String.format(
 					"Auth service URL %s is invalid. Server said: %s %s",
 					url, response, conn.getResponseMessage()));
+		}
+	}
+	
+	private static void checkHttps(
+			final HttpURLConnection conn,
+			final AuthConfig config) {
+		if (!config.isInsecureURLsAllowed()) {
+			// force an exception, this maintains backwards compatibility with
+			// earlier versions
+			@SuppressWarnings("unused")
+			final HttpsURLConnection h = (HttpsURLConnection) conn;
 		}
 	}
 }
