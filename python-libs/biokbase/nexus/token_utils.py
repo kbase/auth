@@ -106,12 +106,18 @@ class LoggingCacheWrapper(object):
         log.debug(message.format(self.cache.__class__.__name__, key_id))
         return self.cache.get_public_key(key_id)
 
-def validate_token(token, cache=InMemoryCache(), verify=True):
+def validate_token(token, cache=InMemoryCache(), verify=True, auth_service_url=None):
     """
     Given a request or access token validate it.
 
     Keyword arguments:
     :param tokens: A signed authentication token which was provided by Nexus
+
+    :param auth_service_url: An optional url of KBase auth_service; In case 
+    auth_service_url is not None we're going to make authentication request 
+    to '/Sessions/Login' function of KBase auth_service (communicating with 
+    GlobusOnline on service side) rather than communicate with GlobusOnline 
+    directly.
 
     :raises ValueError: If the signature is invalid, the token is expired or
     the public key could not be gotten.
@@ -121,7 +127,27 @@ def validate_token(token, cache=InMemoryCache(), verify=True):
     for entry in unencoded_token.split('|'):
         key, value = entry.split('=')
         token_map[key] = value
-
+    if auth_service_url:
+        # Since auth_service_url was passed authentication request to 
+        # '/Sessions/Login' function of KBase auth_service will be used
+        # rather than direct communication with GlobusOnline.
+        now = time.mktime(datetime.utcnow().timetuple())
+        if token_map['expiry'] < now:
+            raise ValueError('TokenExpired')
+        headers = {'Content-type': 'application/x-www-form-urlencoded'}
+        url = auth_service_url + '/Sessions/Login'
+        # token will be sent to auth_service for validation and user_id 
+        # will be returned back.
+        data = 'token=' + unencoded_token + '&fields=user_id'
+        ret = requests.post(url, headers = headers, data = data)
+        status = ret.status_code
+        if status >= 200 and status <= 299:
+            # Parse response in JSON format, it's a map containing requested
+            # user properties (only user_id in our case).
+            user_map = json.loads(ret.text)
+        else:
+            raise ValueError('Failed to verify token: ' + ret.text)
+        return (token_map['un'], user_map['user_id'], '')
     # If the public key is not already in the cache, cache it keyed by the signing subject.
     if not cache.has_public_key(token_map['SigningSubject']):
         response = requests.get(token_map['SigningSubject'], verify=verify)

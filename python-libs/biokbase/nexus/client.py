@@ -67,19 +67,25 @@ class NexusClient(object):
         self.cache = cache_impl_class(*cache_config.get('args', []))
         self.cache = token_utils.LoggingCacheWrapper(self.cache)
 
-    def validate_token(self, token):
+    def validate_token(self, token, auth_service_url=None):
         """
         Validate that a token was issued for the specified user and client by
         the server in the SigningSubject.
 
         :param token: An authentication token provided by the client.
+        
+        :param auth_service_url: An optional url of KBase auth_service; In case 
+        auth_service_url is defined we're going to make authentication request 
+        to '/Sessions/Login' function of KBase auth_service (communicating with 
+        GlobusOnline on service side) rather than communicate with GlobusOnline 
+        directly.
 
         :return: username, client id and the server that issued the token.
         
         :raises ValueError: If the signature is invalid, the token is expired or
         the public key could not be gotten.
         """
-        return token_utils.validate_token(token, self.cache, self.verify_ssl)
+        return token_utils.validate_token(token, self.cache, self.verify_ssl, auth_service_url)
 
 
     def generate_request_url(self, username=None):
