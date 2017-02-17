@@ -5,7 +5,7 @@ sudo: required
 services:
 - docker
 install:
-- sudo pip install nose2 coverage
+- sudo pip install nose2 coverage rsa requests paramiko pyasn1
 - cpanm install Devel::Cover
 script:
 - pushd Bio-KBase-Auth
