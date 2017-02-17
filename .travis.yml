@@ -10,8 +10,8 @@ install:
   - sudo pip install nose2
   - cpanm install Devel::Cover
 script:
-  - cd Bio-KBase-Auth
+  - pushd Bio-KBase-Auth
   - perl Build.PL
   - ./Build installdeps --cpan_client 'cpanm'
-  - cd ..
-  - make test
+  - ./Build test
+
