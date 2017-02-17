@@ -1,3 +1,8 @@
+# For use with travis ci, please create an encrypted file using the
+# method described in https://docs.travis-ci.com/user/encrypting-files/
+# and store the file in test.cfg.gpg
+# The travis.yml file is preconfigured to use a registered encryption
+# key to decrypt this file during testing
 [auth_test]
 test.validuser=kbasetest
 test.validpassword=******

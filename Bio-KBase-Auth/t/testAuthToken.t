@@ -8,10 +8,7 @@
 
 use strict;
 
-#use lib "../lib/";
-
-use Test::More tests => 32;
-#use Test::More;
+use Test::More;
 
 use Data::Dumper;
 use Config::Simple;
@@ -61,38 +58,55 @@ ok( ! $at->token(), 'Verifying no token yet');
 ok( $at->token($validtoken1), 'Attempting to set valid token');
 ok( ! $at->token($invalidtoken), 'Attempting to set invalid token');
 
-my $at = '';
-ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl,
-    'user_id' => $validuser,
-    'password' => $testConfig{'auth_test.test.validpassword'}
-    ), "Logging in using valid id and password");
-ok($at->token(), 'Checking for a token');
-ok($at->validate(), "Validating token using valid username/password");
+if ($validuser && $testConfig{'auth_test.test.validpassword'}) {
+    my $at = '';
+    ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl,
+        'user_id' => $validuser,
+        'password' => $testConfig{'auth_test.test.validpassword'}
+        ), "Logging in using valid id and password");
+    ok($at->token(), 'Checking for a token');
+    ok($at->validate(), "Validating token using valid username/password");
 
-my $at = '';
-ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authBadUrl,
-    'user_id' => $validuser,
-    'password' => $testConfig{'auth_test.test.validpassword'}
-    ), "Logging in to bad auth server using valid id and password");
-ok(!($at->validate()), "Testing that validating token using valid username/password and invalid auth service fails");
+    my $at = '';
+    ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authBadUrl,
+        'user_id' => $validuser,
+        'password' => $testConfig{'auth_test.test.validpassword'}
+        ), "Logging in to bad auth server using valid id and password");
+    ok(!($at->validate()), "Testing that validating token using valid username/password and invalid auth service fails");
 
-my $at = '';
-ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl,
-    'user_id' => $testConfig{'auth_test.test.validuser'},
-    'password' => $testConfig{'auth_test.test.invalidpassword'}
-    ), "Logging in using valid account and bad password");
-ok(!($at->validate()), "Testing that bad password fails");
+    my $at = '';
+    ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl,
+        'user_id' => $testConfig{'auth_test.test.validuser'},
+        'password' => $testConfig{'auth_test.test.invalidpassword'}
+        ), "Logging in using valid account and bad password");
+    ok(!($at->validate()), "Testing that bad password fails");
 
-my $at = '';
-ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl,
-    'user_id' => $testConfig{'auth_test.test.invaliduser'},
-    'password' => $testConfig{'auth_test.test.invalidpassword'}
-    ), "Logging in using bad account and bad password");
-ok(!($at->validate()), "Testing that bad userid/password fails");
+    my $at = '';
+    ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl,
+        'user_id' => $testConfig{'auth_test.test.invaliduser'},
+        'password' => $testConfig{'auth_test.test.invalidpassword'}
+        ), "Logging in using bad account and bad password");
+    ok(!($at->validate()), "Testing that bad userid/password fails");
 
-my $at = '';
-ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl, 'user_id' => undef, ), "Logging in using undef user_id");
-ok(!($at->validate()), "Testing that undef user_id fails");
+    my $at = '';
+    ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl, 'user_id' => undef, ), "Logging in using undef user_id");
+    ok(!($at->validate()), "Testing that undef user_id fails");
+
+    ok(Bio::KBase::Auth::SetConfigs('auth_svc'=>$authurl,"password" =>$validpassword,"user_id" => $validuser), 'Creating settings for testing kbase_config');
+
+    my $at = '';
+    ok( $at = Bio::KBase::AuthToken->new(), "Creating a new token object for testing kbase_config with password");
+    ok( $at->user_id() eq $validuser, "Verifying that valid user was read from kbase_config");
+    ok( $at->validate(), "Verifying that valid user token was acquired properly with userid and password");
+
+    # SetConfigs seems to be remembering configs set during the test
+    if ( -e $Bio::KBase::Auth::ConfPath) {
+        # restore old config
+        $old_config{'password'} = undef;
+        Bio::KBase::Auth::SetConfigs( %old_config);
+    }
+
+}
 
 my $at = '';
 ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl,
@@ -118,23 +132,9 @@ ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl,
     ), "Logging in using empty token");
 ok(!($at->validate()), "Testing that empty token fails");
 
-ok(Bio::KBase::Auth::SetConfigs('auth_svc'=>$authurl,"password" =>$validpassword,"user_id" => $validuser), 'Creating settings for testing kbase_config');
-
-my $at = '';
-ok( $at = Bio::KBase::AuthToken->new(), "Creating a new token object for testing kbase_config with password");
-ok( $at->user_id() eq $validuser, "Verifying that valid user was read from kbase_config");
-ok( $at->validate(), "Verifying that valid user token was acquired properly with userid and password");
-
 my $at = '';
 ok( $at = Bio::KBase::AuthToken->new('auth_svc'=>$authurl, ignore_kbase_config => 1), "Creating a blank object by ignoring the kbase_config file");
 ok( ! defined($at->user_id()), "Verifying that kbase_config was ignored");
-
-# SetConfigs seems to be remembering configs set during the test
-if ( -e $Bio::KBase::Auth::ConfPath) {
-    # restore old config
-    $old_config{'password'} = undef;
-    Bio::KBase::Auth::SetConfigs( %old_config);
-}
 
 
 done_testing();
