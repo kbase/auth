@@ -13,7 +13,7 @@ use Term::ReadKey;
 my $primaryArgs = [];
 #Defining usage and options
 my ($opt, $usage) = describe_options(
-    "$0 <".join("> <",@{$primaryArgs})."> %o\nDetermine who you are logged in as.",
+    "$0 <".join("> <",@{$primaryArgs})."> %o\n\nDetermine who you are logged in as.\n",
     [ 'token|t', 'Print out user token instead of your user name.' ],
     [ 'help|h|?', 'Print this usage information' ],
     );

@@ -493,6 +493,27 @@ public class AuthServiceTest {
 	}
 	
 	@Test
+	public void configURLTruncation() throws Exception {
+		/* Test that magic urls are truncated correctly */
+		final URL kbase = new URL(
+				"https://www.kbase.us/services/authorization/");
+		final URL kbasess = new URL(kbase.toString() + "Sessions/Login");
+		final URL kbasess2 = new URL(kbase.toString() + "Sessions/Login/");
+		final URL kbasess3 = new URL(kbase.toString() + "Sessions/Login/a");
+		assertThat("incorrect truncated url", new AuthConfig()
+				.withKBaseAuthServerURL(kbase).getAuthServerURL(), is(kbase));
+		assertThat("incorrect truncated url", new AuthConfig()
+				.withKBaseAuthServerURL(kbasess).getAuthServerURL(),
+				is(kbase));
+		assertThat("incorrect truncated url", new AuthConfig()
+				.withKBaseAuthServerURL(kbasess2).getAuthServerURL(),
+				is(kbase));
+		assertThat("incorrect truncated url", new AuthConfig()
+				.withKBaseAuthServerURL(kbasess3)
+				.getAuthServerURL(), is(new URL(kbasess3.toString() + "/")));
+	}
+	
+	@Test
 	public void configObject() throws Exception {
 		
 		assertThat("incorrect default auth url",

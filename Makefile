@@ -8,17 +8,17 @@ BIN_PERL = $(addprefix $(BIN_DIR)/,$(basename $(notdir $(SRC_PERL))))
 LIB_PERL = $(wildcard Bio-KBase-Auth/lib/Bio/KBase/*.pm)
 
 
-GLOBUS_TOKEN_URL = https://nexus.api.globusonline.org/goauth/token?grant_type=client_credentials
-GLOBUS_PROFILE_URL = https://nexus.api.globusonline.org/users
-TRUST_TOKEN_SIGNERS = https://nexus.api.globusonline.org/goauth/keys
-ROLE_SERVICE_URL = https://kbase.us/services/authorization/Roles
+#GLOBUS_TOKEN_URL = https://nexus.api.globusonline.org/goauth/token?grant_type=client_credentials
+#GLOBUS_PROFILE_URL = https://nexus.api.globusonline.org/users
+#TRUST_TOKEN_SIGNERS = https://nexus.api.globusonline.org/goauth/keys
+#ROLE_SERVICE_URL = https://kbase.us/services/authorization/Roles
 
 TPAGE_ARGS = --define kb_top=$(TARGET) \
-    --define kb_runtime=$(DEPLOY_RUNTIME) \
-    --define globus_token_url=$(GLOBUS_TOKEN_URL) \
-    --define globus_profile_url=$(GLOBUS_PROFILE_URL) \
-    --define "trust_token_signers=$(TRUST_TOKEN_SIGNERS)" \
-    --define role_service_url=$(ROLE_SERVICE_URL)
+    --define kb_runtime=$(DEPLOY_RUNTIME)
+#    --define globus_token_url=$(GLOBUS_TOKEN_URL) \
+#    --define globus_profile_url=$(GLOBUS_PROFILE_URL) \
+#    --define "trust_token_signers=$(TRUST_TOKEN_SIGNERS)" \
+#    --define role_service_url=$(ROLE_SERVICE_URL)
 
 DEPLOY_RUNTIME ?= /kb/runtime
 TARGET ?= /kb/deployment
@@ -46,7 +46,7 @@ deploy: build-libs deploy-libs deploy-docs deploy-scripts
 
 build-libs:
 	-mkdir lib;
-	$(TPAGE) $(TPAGE_ARGS) Constants.pm.tt > Bio-KBase-Auth/lib/Bio/KBase/AuthConstants.pm
+#	$(TPAGE) $(TPAGE_ARGS) Constants.pm.tt > Bio-KBase-Auth/lib/Bio/KBase/AuthConstants.pm
 	cd Bio-KBase-Auth; \
 	$(TOP_ABS)/runtime/bin/perl ./Build.PL ; \
 	cd ..; \
