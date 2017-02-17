@@ -9,7 +9,6 @@ install:
 - cpanm install Devel::Cover
 script:
 - pushd Bio-KBase-Auth
-- ls -l test.cfg
 - perl Build.PL
 - ./Build installdeps --cpan_client 'cpanm'
 - ./Build test
