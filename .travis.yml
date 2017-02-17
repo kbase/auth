@@ -16,4 +16,4 @@ env:
   global:
     secure: oelcDO7c3gptOF7sk7K32dbUN5X7eeAJSrb8LEhCVzNB2K7Wz6+rnXFWagvqP6XJ/YQY8SyJ87fL/5RmVbI074x9eVmLnQefQJFV85Gib0ATiz59ku7PRWJ1P4iu/vxC83mBIlfz2PCYpI6glJVGIDElfewKH74Chr0HRUhq6L0=
 before_install:
-  - cd Bio-KBase-Auth && echo $config_pass | gpg --passphrase-fd 0 test.cfg.gpg
+  - ( cd Bio-KBase-Auth && echo $config_pass | gpg --passphrase-fd 0 test.cfg.gpg )
