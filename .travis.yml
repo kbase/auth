@@ -1,0 +1,19 @@
+language: java
+perl:
+  - "5.22"
+  - "5.20"
+  - "5.18"
+sudo: required
+
+services:
+  - docker
+
+install:
+  - sudo pip install nose2
+  - sudo cpanm install Devel::Cover
+script:
+  - cd Bio-KBase-Auth
+  - perl Build.PL
+  - ./Build installdeps --cpan_client 'cpanm'
+  - cd ..
+  - make test
