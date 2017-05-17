@@ -1,0 +1,21 @@
+language: perl
+perl:
+- '5.18'
+sudo: required
+services:
+- docker
+install:
+- sudo pip install nose2 coverage rsa requests paramiko pyasn1
+- cpanm install Devel::Cover
+script:
+- pushd Bio-KBase-Auth
+- perl Build.PL
+- ./Build installdeps --cpan_client 'cpanm'
+- ./Build test
+- popd
+- (cd python-libs; ./runtests.sh )
+env:
+  global:
+    secure: oelcDO7c3gptOF7sk7K32dbUN5X7eeAJSrb8LEhCVzNB2K7Wz6+rnXFWagvqP6XJ/YQY8SyJ87fL/5RmVbI074x9eVmLnQefQJFV85Gib0ATiz59ku7PRWJ1P4iu/vxC83mBIlfz2PCYpI6glJVGIDElfewKH74Chr0HRUhq6L0=
+before_install:
+  - ( cd Bio-KBase-Auth && echo $config_pass | gpg --passphrase-fd 0 test.cfg.gpg )

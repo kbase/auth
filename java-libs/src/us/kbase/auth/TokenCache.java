@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -45,7 +46,7 @@ public class TokenCache {
 	
 	final private int size;
 	final private int maxsize;
-	final private ConcurrentHashMap<String, UserDate> cache;
+	final private Map<String, UserDate> cache;
 	
 	/**
 	 * Create a new TokenCache.

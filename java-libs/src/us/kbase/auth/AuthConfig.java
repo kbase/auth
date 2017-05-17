@@ -73,7 +73,10 @@ public class AuthConfig {
 		kbaseUsersGroupID = UUID.fromString(DEFAULT_KBASE_USER_GROUP_ID);
 	}
 	
-	/** Set the URL of the KBase authorization server
+	/** Set the URL of the KBase authorization server. Note that to maintain
+	 * compatibility with other languages' auth clients and previous versions
+	 * of this client, URLs ending in Sessions/Login or Sessions/Login/ will
+	 * have that portion of the URL removed.
 	 * @param authServer the URL of the KBase authorization server.
 	 * @return this
 	 * @throws URISyntaxException if the URL is not a valid URI. In general
@@ -88,7 +91,18 @@ public class AuthConfig {
 			try {
 				authServer = new URL(authServer.toString() + "/");
 			} catch (MalformedURLException e) {
-				throw new RuntimeException("This can't happen");
+				throw new RuntimeException("This can't happen", e);
+			}
+		}
+		if (authServer.getPath().endsWith(LOGIN_LOC) ||
+				authServer.getPath().endsWith(LOGIN_LOC + "/")) {
+			final int index = authServer.toString().lastIndexOf(LOGIN_LOC);
+			try {
+				authServer = new URL(authServer.toString()
+						.substring(0, index));
+			} catch (MalformedURLException e) {
+				throw new RuntimeException(
+						"The impossible just occured. Congratulations.", e);
 			}
 		}
 		authServerURL = authServer.toURI();

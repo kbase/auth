@@ -5,6 +5,24 @@ Java client for the KBase authorization service (and Globus Online directly
 where the KBase auth service doesn't yet have the required functionality).
 See the versions file for a mapping of git commit -> version.
 
+
+VERSION 0.4.4 (Released 11/21/16)
+--------------------------------
+
+UPDATED FEATURES / BUG FIXES:
+- Fix for non-compatible ConcurrentHashMap.keySet() method in TokenCache 
+  class causing java.lang.NoSuchMethodError in Java 7 (in some cases).
+
+VERSION 0.4.3 (Released 9/16/16)
+--------------------------------
+
+UPDATED FEATURES / BUG FIXES:
+- If the URL provided for the KBase auth service ends with Sessions/Login or
+  Sessions/Login/ that suffix will be removed from the url.
+  AuthConfig.getAuthServerURL() will return this modified URL, while
+  AuthConfig.getAuthLoginURL() will, as usual, return the URL returned by
+  getAuthServerURL() appended with /Sessions/Login.
+
 VERSION 0.4.2 (Released 8/25/16)
 --------------------------------
 

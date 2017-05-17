@@ -14,14 +14,14 @@ use Getopt::Long::Descriptive;
 use Bio::KBase::AuthToken;
 use Term::ReadKey;
 
-my $primaryArgs = ["Username"];
+my $primaryArgs = ["username"];
 #Defining usage and options
 my ($opt, $usage) = describe_options(
-    "$0 <".join("> <",@{$primaryArgs})."> %o\nAcquire a KBase authentication token for the username specified. " .
-    "Prompts for password if not specified on the command line. " . 
-    "Upon successful login the token will be placed in the INI format file " .
+    "$0 <".join("> <",@{$primaryArgs})."> %o\n\nAcquire a KBase authentication token for the username specified.\n" .
+    "Prompts for password if not specified on the command line (unless -p specified).\n" . 
+    "Upon successful login the token will be placed in the INI format file\n\t" .
     $Bio::KBase::Auth::ConfPath .
-    " and used by default for KBase clients that require authentication",
+    "\nand used by default for KBase clients that require authentication.\n",
     [ 'password|p:s', 'User password' ],
     [ 'help|h|?', 'Print this usage information' ],
     );

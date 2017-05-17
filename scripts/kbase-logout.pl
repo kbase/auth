@@ -18,9 +18,9 @@ my $primaryArgs = [];
 
 #Defining usage and options
 my ($opt, $usage) = describe_options(
-    "$0 %o\nClears any kbase authentication tokens from the INI file " .
+    "$0 %o\n\nClears any kbase authentication tokens from the INI file\n\t" .
     $Bio::KBase::Auth::ConfPath .
-    " so that you are logged out. Takes no options, and does not complain if you don't have a token set.",
+    "\nso that you are logged out.\nTakes no options, and does not complain if you don't have a token set.\n",
     [ 'help|h|?', 'Print this usage information' ],
 );
 if (defined($opt->{help})) {
