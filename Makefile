@@ -44,6 +44,8 @@ bin: $(BIN_PERL)
 
 deploy: build-libs deploy-libs deploy-docs deploy-scripts
 
+deploy-client: deploy
+
 build-libs:
 	-mkdir lib;
 #	$(TPAGE) $(TPAGE_ARGS) Constants.pm.tt > Bio-KBase-Auth/lib/Bio/KBase/AuthConstants.pm
