@@ -5,6 +5,11 @@ Java client for the KBase authorization service (and Globus Online directly
 where the KBase auth service doesn't yet have the required functionality).
 See the versions file for a mapping of git commit -> version.
 
+VERSION 0.5.0 (Released 6/14/18)
+--------------------------------
+
+UPDATED FEATURES / BUG FIXES
+- Convert to Gradle workflow
 
 VERSION 0.4.4 (Released 11/21/16)
 --------------------------------

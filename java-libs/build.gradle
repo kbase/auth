@@ -1,0 +1,33 @@
+/**
+ * Gradle build file for the java auth packages
+ */
+
+plugins {
+    id 'java-library'
+}
+
+// In this section you declare where to find the dependencies of your project
+repositories {
+    maven {
+        url 'http://ci.kbase.us:8081/artifactory/gradle-dev'
+    }
+}
+
+dependencies {
+    // Use JUnit test framework
+    implementation 'jackson:jackson-annotations:2.2.3'
+    implementation 'jackson:jackson-core:2.2.3'
+    implementation 'jackson:jackson-databind:2.2.3'
+    testImplementation 'junit:junit:4.9'
+}
+
+version = '0.5.0'
+
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version
+        )
+    }
+}
